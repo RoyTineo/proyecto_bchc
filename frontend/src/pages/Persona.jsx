@@ -42,12 +42,17 @@ export const Persona = () => {
       confirmButtonText: "Sí, eliminar!",
       cancelButtonText: "Cancelar",
     });
-
+// Eliminar persona, cambiando de estado a 0
     if (result.isConfirmed) {
-      await deletePersona(id);
-      loadPersonas();
+      await deletePersona(id, { estado: 0 });	// Actualiza el estado a 0 en la base de datos
+      loadPersonas(); // Recargar la lista para reflejar los cambios
       Swal.fire("Eliminado!", "El registro ha sido eliminado.", "success");
     }
+    // if (result.isConfirmed) {
+    //   await deletePersona(id);	// Actualiza el estado a 0 en la base de datos
+    //   loadPersonas(); // Recargar la lista para reflejar los cambios
+    //   Swal.fire("Eliminado!", "El registro ha sido eliminado.", "success");
+    // }
   };
 
   const validationSchema = Yup.object({
@@ -67,17 +72,28 @@ export const Persona = () => {
     ),
     direccion: Yup.string().optional(),
   });
-
+//mostrando personas copn estado diferentes a 0 osea todos los activos
   function renderMain() {
-    if (personas.length === 0) return <h2>No hay Personas Registradas</h2>;
+    const personasActivas = personas.filter((persona) => persona.estado !== 0);
+    if (personasActivas.length === 0) return <h2>No hay Personas Registradas</h2>;
     return (
       <TablePersona
-        customers={personas}
+        customers={personasActivas}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
     );
   }
+  // function renderMain() {
+  //   if (personas.length === 0) return <h2>No hay Personas Registradas</h2>;
+  //   return (
+  //     <TablePersona
+  //       customers={personas}
+  //       onEdit={handleEdit}
+  //       onDelete={handleDelete}
+  //     />
+  //   );
+  // }
 
   return (
     <>

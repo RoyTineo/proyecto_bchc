@@ -50,17 +50,33 @@ export const updatePersona = async (req, res) => {
 }
 };
 
+// Eliminar persona, cambniando de estado a 0
 export const deletePersona = async (req, res) => {
   try {
-    const [result] = await pool.query("DELETE FROM tb_persona WHERE idtb_persona=?", [
-        req.params.id,
+    const [result] = await pool.query("UPDATE tb_persona SET ? WHERE idtb_persona = ?", [
+      req.body,
+      req.params.id,
       ]);
     
       if (result.affectedRows === 0) {
-        return res.status(404).json({ mensaje: "Tarea no encontrada" });
+        return res.status(404).json({ mensaje: "Persona no encontrada" });
       }
       return res.sendStatus(204);
 } catch (error) {
     return res.status(500).json({ mensaje: error.message });
 }
 };
+// export const deletePersona = async (req, res) => {
+//   try {
+//     const [result] = await pool.query("DELETE FROM tb_persona WHERE idtb_persona=?", [
+//         req.params.id,
+//       ]);
+    
+//       if (result.affectedRows === 0) {
+//         return res.status(404).json({ mensaje: "Tarea no encontrada" });
+//       }
+//       return res.sendStatus(204);
+// } catch (error) {
+//     return res.status(500).json({ mensaje: error.message });
+// }
+// };

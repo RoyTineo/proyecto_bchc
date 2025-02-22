@@ -27,16 +27,24 @@ export const PersonaContextProvider = ({ children }) => {
     setPersonas(response.data);
     // console.log(response.data);
   }
-
-  const deletePersona = async (id) => {
+// Eliminar persona, cambiando de estado a 0
+  const deletePersona = async (id,newFields) => {
     try {
-      const response = await deletePersonaRequest(id);
-      setPersonas(personas.filter((persona) => persona.id !== id));
+      const response = await deletePersonaRequest(id,newFields);
       console.log(response);
     } catch (error) {
       console.error(error);
     }
   };
+  // const deletePersona = async (id) => {
+  //   try {
+  //     const response = await deletePersonaRequest(id);
+  //     setPersonas(personas.filter((persona) => persona.id !== id));
+  //     console.log(response);
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
   const createPersona = async (persona) => {
     try {

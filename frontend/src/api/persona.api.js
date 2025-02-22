@@ -14,6 +14,11 @@ export const createPersonaRequest  = async (persona) => {
 export const updatePersonaRequest  = async (id, newPersona) => {
   return await axios.put(`http://localhost:4000/persona/${id}`,newPersona);
 };
-export const deletePersonaRequest  = async (id) => {
-  return await axios.delete(`http://localhost:4000/persona/${id}`);
+
+// Eliminar persona cambiando de estado a 0
+export const deletePersonaRequest  = async (id, newPersona) => {
+  return await axios.put(`http://localhost:4000/persona/${id}`,newPersona);
 };
+// export const deletePersonaRequest  = async (id) => {
+//   return await axios.delete(`http://localhost:4000/persona/${id}`);
+// };
