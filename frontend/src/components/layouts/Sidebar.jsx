@@ -63,13 +63,9 @@ const Menu = [
     icon: <IoPersonAddSharp />,
     to: "/Persona",
   },
+  
   {
-    label: "Cliente",
-    icon: <IoPersonAddSharp />,
-    to: "/Cliente",
-  },
-  {
-    label: "Solicitudes",
+    label: "Generar Solicitudes",
     icon: <IoDocumentText />,
     to: "/Solicitudes",
   },

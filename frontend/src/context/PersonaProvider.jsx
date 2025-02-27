@@ -5,6 +5,7 @@ import {
   createPersonaRequest,
   updatePersonaRequest,
   deletePersonaRequest,
+  getPersonaByDNIRequest,
 } from "../api/persona.api";
 
 import { PersonaContext } from "./PersonaContext";
@@ -27,10 +28,10 @@ export const PersonaContextProvider = ({ children }) => {
     setPersonas(response.data);
     // console.log(response.data);
   }
-// Eliminar persona, cambiando de estado a 0
-  const deletePersona = async (id,newFields) => {
+  // Eliminar persona, cambiando de estado a 0
+  const deletePersona = async (id, newFields) => {
     try {
-      const response = await deletePersonaRequest(id,newFields);
+      const response = await deletePersonaRequest(id, newFields);
       console.log(response);
     } catch (error) {
       console.error(error);
@@ -49,9 +50,16 @@ export const PersonaContextProvider = ({ children }) => {
   const createPersona = async (persona) => {
     try {
       const response = await createPersonaRequest(persona);
-      setPersonas([...personas, response.data]);
+      console.log(response);
+      if (response.status === 200) {
+        setPersonas([...personas, response.data]); // Solo actualizar si el registro fue exitoso
+      }
+      return response; // Retorna la respuesta para manejar el formulario.
     } catch (error) {
       console.error(error);
+      return (
+        error.response || { status: 500, message: "Error en la solicitud" }
+      );
     }
   };
   const getPersona = async (id) => {
@@ -59,9 +67,20 @@ export const PersonaContextProvider = ({ children }) => {
       const response = await getPersonaRequest(id);
       return response.data;
     } catch (error) {
-      console.error(error);
+      console.error("Error al obtener persona", error);
     }
   };
+
+  const getPersonaByDNI = async (dni) => {
+    try {
+      const response = await getPersonaByDNIRequest(dni);
+      return response.data; // Retorna la persona encontrada
+    } catch (error) {
+      console.error("Error al obtener persona:", error);
+      return null;
+    }
+  };
+
   const updatePersona = async (id, newFields) => {
     try {
       const response = await updatePersonaRequest(id, newFields);
@@ -80,8 +99,8 @@ export const PersonaContextProvider = ({ children }) => {
         createPersona,
         getPersona,
         updatePersona,
+        getPersonaByDNI,
       }}
-      
     >
       {children}
     </PersonaContext.Provider>

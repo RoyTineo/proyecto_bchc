@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   getPersonas,
   getPersona,
+  getPersonaByDNI,
   createPersona,
   updatePersona,
   deletePersona,
@@ -9,10 +10,11 @@ import {
 
 const router = Router();
 
-router.get("/persona", getPersonas);
-router.get("/persona/:id", getPersona);
-router.post("/persona", createPersona);
-router.put("/persona/:id", updatePersona);
-router.delete("/persona/:id", deletePersona);
+router.get("/api/persona", getPersonas);
+router.get("/api/persona/:id", getPersona);
+router.get("/api/personabydni/:dni", getPersonaByDNI);
+router.post("/api/persona", createPersona);
+router.put("/api/persona/:id", updatePersona);
+router.delete("/api/persona/:id", deletePersona);
 
 export default router;

@@ -16,7 +16,7 @@ export function MyRoutes() {
         {/* Rutas dentro del diseño principal */}
         <Route index element={<Index />} />
         <Route path="Persona" element={<Persona />} />
-        <Route path="Cliente" element={<Cliente />} />
+        {/* <Route path="Cliente" element={<Cliente />} /> */}
         <Route path="Solicitudes" element={<Solicitudes />} />
         <Route path="Evaluaciones" element={<Evaluaciones />} />
         <Route path="Resoluciones" element={<Resoluciones />} />

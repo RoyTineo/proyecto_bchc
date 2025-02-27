@@ -4,14 +4,17 @@ import { MyRoutes } from "./routes/routes";
 import "./App.css";
 
 import { PersonaContextProvider } from "./context/PersonaProvider";
+import { SolicitudContextProvider } from "./context/SolicitudProvider";
 
 function App() {
   return (
-    <PersonaContextProvider>
-      <BrowserRouter>
-        <MyRoutes />
-      </BrowserRouter>
-    </PersonaContextProvider>
+    <SolicitudContextProvider>
+          <PersonaContextProvider>
+        <BrowserRouter>
+          <MyRoutes />
+        </BrowserRouter>
+      </PersonaContextProvider>
+    </SolicitudContextProvider>
   );
 }
 

@@ -1,0 +1,278 @@
+import React, { useEffect, useState } from "react";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+
+import Swal from "sweetalert2";
+import Input from "../components/ui/Input";
+import ComboBox from "../components/ui/ComboBox";
+import Button from "../components/ui/Button";
+import TextHeader from "../components/ui/TextHeader";
+import CalendarInput from "../components/ui/CalendarInput";
+import DniInput from "../components/ui/DniInput";
+
+import { useSolicitud } from "../context/SolicitudProvider";
+import { usePersona } from "../context/PersonaProvider"; // Contexto para buscar personas por DNI
+import TableSolicitud from "../components/ui/TableSolicitud";
+
+const tipoCredito = [
+  { value: "Principal", label: "Principal" },
+  { value: "Paralelo", label: "Paralelo" },
+  { value: "Extraordinario", label: "Extraordinario" },
+  { value: "Campaña", label: "Campaña" },
+  { value: "Ampliacion", label: "Ampliacion" },
+];
+
+export const Solicitudes = () => {
+  const {
+    solicitudes,
+    loadSolicitudes,
+    deleteSolicitud,
+    createSolicitud,
+    getSolicitud,
+    updateSolicitud,
+  } = useSolicitud();
+
+  const [editingSolicitud, setEditingSolicitud] = useState(null);
+  const [selectedSolicitud, setSelectedSolicitud] = useState(null);
+
+  useEffect(() => {
+    loadSolicitudes();
+  }, []);
+
+  const handleEdit = async (id) => {
+    Swal.fire("Editar", `Editar Solicitud con ID: ${id}`, "info");
+    const solicitud = await getSolicitud(id);
+    if (solicitud) {
+      setEditingSolicitud(solicitud); // Asegurar que los datos cargan en el formulario
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "No podrás revertir esto!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar!",
+      cancelButtonText: "Cancelar",
+    });
+    // Eliminar solicitud, cambiando de estado a 0
+    if (result.isConfirmed) {
+      await deleteSolicitud(id, { estado: 0 }); // Actualiza el estado a 0 en la base de datos
+      loadSolicitudes(); // Recargar la lista para reflejar los cambios
+      Swal.fire("Eliminado!", "El registro ha sido eliminado.", "success");
+    }
+  };
+
+  const validationSchema = Yup.object().shape({
+    date: Yup.string().required("La fecha es obligatoria"),
+    tipoCredito: Yup.string().required("El tipo de crédito es obligatorio"),
+    destino: Yup.string().required("El destino es obligatorio"),
+    dniSolicitante: Yup.string()
+      .length(8, "El DNI debe tener 8 dígitos")
+      .required("El DNI es obligatorio"),
+    dniFiador: Yup.string()
+      .length(8, "El DNI debe tener 8 dígitos")
+      .required("El DNI del fiador es obligatorio"),
+    monto: Yup.number()
+      .min(1, "El monto debe ser mayor a 0")
+      .required("El monto es obligatorio"),
+    moneda: Yup.string().required("La moneda es obligatoria"),
+    plazo: Yup.number()
+      .min(1, "El plazo debe ser mayor a 0")
+      .required("El plazo es obligatorio"),
+  });
+
+  //mostrando solicitudes con estado diferentes a 0 osea todos los activos
+  function renderMain() {
+    const solicitudesActivas = solicitudes.filter(
+      (solicitud) => solicitud.estado !== 0
+    );
+    // console.log("Dic solicitudes",solicitudes);
+    if (solicitudesActivas.length === 0)
+      return <h2>No hay Solicitudes Registradas</h2>;
+    return (
+      <TableSolicitud
+        solicitudes={solicitudesActivas}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+    );
+  }
+
+  return (
+    <>
+      {/* ############## Solicitud de credito ########### */}
+      <Formik
+        initialValues={{
+          date: new Date().toISOString().split("T")[0], // Fecha actual en formato YYYY-MM-DD
+          tipoCredito: "",
+          destino: "",
+          moneda: "SOLES",
+          monto: "",
+          plazo: "",
+          idSolicitante: "",
+          idFiador: "",
+          situacion: "pendiente",
+        }}
+        // initialValues={{
+        //   date: editingSolicitud ? editingSolicitud.date : "",
+        //   tipoCredito: editingSolicitud ? editingSolicitud.tipoCredito : "",
+        //   destino: editingSolicitud ? editingSolicitud.destino : "",
+        //   dniSolicitante: editingSolicitud
+        //     ? editingSolicitud.dniSolicitante
+        //     : "",
+        //   nombreSolicitante: editingSolicitud
+        //     ? editingSolicitud.nombreSolicitante
+        //     : "",
+        //   dniFiador: editingSolicitud ? editingSolicitud.dniFiador : "",
+        //   nombreFiador: editingSolicitud ? editingSolicitud.nombreFiador : "",
+        //   monto: editingSolicitud ? editingSolicitud.monto : "",
+        //   moneda: editingSolicitud ? editingSolicitud.moneda : "SOLES",
+        //   plazo: editingSolicitud ? editingSolicitud.plazo : "",
+        // }}
+        validationSchema={validationSchema}
+        enableReinitialize
+        onSubmit={async (values, actions) => {
+          try {
+            if (editingSolicitud) {
+              console.log(values);
+              await updateSolicitud(selectedSolicitud.idtb_solicitud, values);
+              setEditingSolicitud(false);
+              setSelectedSolicitud(null);
+              Swal.fire(
+                "Actualizado!",
+                "Registro actualizado con éxito!",
+                "success"
+              );
+            } else {
+              const response = await createSolicitud(values); // Esperar la respuesta del backend
+              console.log(response);
+              if (response.status === 200) {
+                Swal.fire(
+                  "Registrado!",
+                  "Registro agregado con éxito!",
+                  "success"
+                );
+              } else {
+                Swal.fire(
+                  "Error",
+                  "No se pudo registrar la solicitud",
+                  "error"
+                );
+              }
+            }
+          } catch (error) {
+            Swal.fire("Error", "Ocurrió un problema al registrar", "error");
+          }
+
+          actions.resetForm();
+          loadSolicitudes();
+        }}
+      >
+        {({ setFieldValue, handleSubmit }) => (
+          <Form onSubmit={handleSubmit}>
+            <div className="grid grid-rows-1 grid-cols-1 md:grid-cols-2 gap-x-6">
+              <div className="grid-col-1 ">
+                <div className=" bg-white shadow-md rounded-md p-6">
+                  <TextHeader text="Datos del Solicitante:" />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6">
+                    <div className="lg:grid-col-1 pb-4">
+                      <DniInput
+                        label="DNI:"
+                        name="dniSolicitante"
+                        setFieldValue={setFieldValue}
+                        nombreField="nombreSolicitante"
+                        idField="idSolicitante"
+                        tipoPersona="Solicitante"
+                      />
+                      <p>
+                        <strong>Nombre:</strong>{" "}
+                        <Field
+                          name="nombreSolicitante"
+                          readOnly
+                          className="text-blue-600/100"
+                        />
+                      </p>
+                      <Field type="hidden" name="idSolicitante" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="grid-col-1 ">
+                <div className=" bg-white shadow-md rounded-md p-6">
+                  <TextHeader text="Datos del Fiador:" />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 ">
+                    <div className="lg:grid-col-1  pb-4">
+                      <DniInput
+                        label="DNI:"
+                        name="dniFiador"
+                        setFieldValue={setFieldValue}
+                        nombreField="nombreFiador"
+                        idField="idFiador"
+                        tipoPersona="Fiador"
+                      />
+                      <p>
+                        <strong>Nombre:</strong>{" "}
+                        <Field
+                          name="nombreFiador"
+                          readOnly
+                          className="text-blue-600/100"
+                        />
+                      </p>
+                      <Field type="hidden" name="idSolicitante" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white shadow-md rounded-md p-6 my-6">
+              <h2 className="text-xl font-bold p-8">
+                {editingSolicitud ? "Editar Persona" : "Registro de Personas"}
+              </h2>
+              <TextHeader text="Solicitud de Crédito:" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  gap-x-6 mt-4 ">
+                <CalendarInput
+                  label="Fecha de Solicitud:"
+                  name="date"
+                  setFieldValue={setFieldValue}
+                />
+
+                {/* <Input label="Fecha:" name="fecha" /> */}
+                <ComboBox
+                  label="Tipo de Credito:"
+                  name="tipoCredito"
+                  options={tipoCredito}
+                />
+                <Input label="Destino:" name="destino" />
+              </div>
+            </div>
+
+            {/* ################ Propuesta de credtio ############## */}
+            <div className="bg-white shadow-md rounded-md p-6 mt-6">
+              <TextHeader text="Datos del credito a solicitar:" />
+              <div className="grid grid-rows-1 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-6 mt-4 ">
+                <Input label="Monto:" name="monto" />
+                <Input label="Moneda:" name="moneda" value="SOLES" />
+                <Input label="Plazo en meses:" name="plazo" placeholder="12 " />
+              </div>
+            </div>
+            <div className="bg-white shadow-md rounded-md p-6 mt-6">
+              <div className="flex justify-center mt-6">
+                <Button type="submit" variant="success">
+                  {editingSolicitud ? "Actualizar" : "Solicitar"}
+                </Button>
+              </div>
+            </div>
+          </Form>
+        )}
+      </Formik>
+      <div className="bg-white shadow-md rounded-md p-8 my-8">
+        <h1 className="text-xl font-bold mb-4">Solicitudes Registradas</h1>
+        {renderMain()}
+      </div>
+    </>
+  );
+};
